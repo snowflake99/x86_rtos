@@ -1,7 +1,11 @@
+# Global variables
+# ---------------------------------------------------------------------------
+# We are doing a recursive build, so we need to set up some global variables
+# so we don't have to redefine CC etc. in the sub-directories.
 AS:=as
 CC:=gcc
 
-CFLAGS:=-ffreestanding -O2 -Wall -Wextra -nostdlib -nostartfiles -nodefaultlibs
+CFLAGS:=-ffreestanding -O2 -Wall -Wextra -nostdlib -nostartfiles -nodefaultlibs -Isource/include
 CPPFLAGS:=
 LIBS:=-lgcc
 
@@ -11,34 +15,47 @@ source/kernel/kernel.o  \
 
 all: iRTOS.bin
 
-.PHONEY: all clean iso run-qemu
+.PHONEY: all clean iso qemu
+
+# Object files that to be linked into mukernel. It'll be populated
+# by the includes below.
+
+include source/lib/Makefile
+
+# Beautify output
+# ---------------------------------------------------------------------------
+QUIET_CC = @echo    '   ' CC'      '$<;
+QUIET_AS = @echo    '   ' AS'      '$<;
+
+# Build targets
+# ---------------------------------------------------------------------------
 
 iRTOS.bin: $(OBJS) linker.ld
-	$(CC) -T linker.ld -o disk_image/$@ $(CFLAGS) $(OBJS) $(LIBS)
+	$(QUIET_CC)$(CC) -T linker.ld -o disk_image/$@ $(CFLAGS) $(OBJS) $(LIBS)
 
 %.o: %.c
-	$(CC) -c $< -o $@ -std=gnu99 $(CFLAGS) $(CPPFLAGS)
+	$(QUIET_CC)$(CC) -c $< -o $@ -std=gnu99 $(CFLAGS) $(CPPFLAGS)
 
 %.o: %.s
-	$(AS) $< -o $@
+	$(QUIET_AS)$(AS) $< -o $@
 
 clean:
-	rm -rf disk_image/isodir
-	rm -f disk_image/iRTOS.bin disk_image/iRTOS.iso $(OBJS)
+	@rm -rf disk_image/isodir
+	@rm -f disk_image/iRTOS.bin disk_image/iRTOS.iso $(OBJS)
 
 iso: iRTOS.iso
 
 isodir disk_image/isodir/boot disk_image/isodir/boot/grub:
-	mkdir -p $@
+	@mkdir -p $@
 
 disk_image/isodir/boot/iRTOS.bin: iRTOS.bin disk_image/isodir/boot
-	cp disk_image/$< $@
+	@cp disk_image/$< $@
 
 disk_image/isodir/boot/grub/grub.cfg: grub/grub.cfg disk_image/isodir/boot/grub
-	cp $< $@
+	@cp $< $@
 
 iRTOS.iso: disk_image/isodir/boot/iRTOS.bin disk_image/isodir/boot/grub/grub.cfg
 	grub-mkrescue -o disk_image/$@ disk_image/isodir
 
-run-qemu: iRTOS.iso
+qemu: iRTOS.iso
 	qemu-system-i386 -cdrom disk_image/iRTOS.iso

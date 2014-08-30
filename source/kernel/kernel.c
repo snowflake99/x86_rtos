@@ -1,6 +1,5 @@
-#include <stdbool.h>
-#include <stddef.h>
-#include <stdint.h>
+#include <types.h>
+#include <string.h>   
 
 static const uint8_t COLOR_BLACK = 0;
 static const uint8_t COLOR_BLUE = 1;
@@ -31,13 +30,13 @@ uint16_t make_vgaentry(char c, uint8_t color)
 	return c16 | color16 << 8;
 }
 
-size_t strlen(const char* str)
+/*size_t strlen(const char* str)
 {
 	size_t ret = 0;
 	while ( str[ret] != 0 )
 		ret++;
 	return ret;
-}
+}*/
 
 static const size_t VGA_WIDTH = 80;
 static const size_t VGA_HEIGHT = 24;
@@ -95,5 +94,5 @@ void terminal_writestring(const char* data)
 void kmain()
 {
 	terminal_initialize();
-	terminal_writestring("Hello, kernel World!\n");
+	terminal_writestring("Hello, kernel World!");
 }
