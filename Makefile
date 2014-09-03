@@ -12,6 +12,7 @@ LIBS:=-lgcc
 OBJS:=\
 source/boot/boot.o      \
 source/kernel/kernel.o  \
+source/kernel/driver/tty.o  \
 
 all: iRTOS.bin
 
